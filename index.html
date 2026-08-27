@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Apex College AI — RAG Knowledge Assistant & Admin Portal</title>
+  <meta name="description" content="AI-Powered Retrieval-Augmented Generation (RAG) assistant for college students and faculty." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="frontend/css/style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand">
+          <div class="brand-icon">
+            <i class="fa-solid fa-graduation-cap"></i>
+          </div>
+          <div class="brand-text">
+            <h2>Apex AI</h2>
+            <span>RAG Campus Assistant</span>
+          </div>
+        </div>
+        <button class="icon-btn close-sidebar-btn" id="closeSidebarBtn" title="Close sidebar">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="sidebar-action">
+        <button class="btn btn-primary new-chat-btn" id="newChatBtn">
+          <i class="fa-solid fa-plus"></i>
+          <span>New Conversation</span>
+        </button>
+      </div>
+
+      <!-- Department Filter Selector -->
+      <div class="sidebar-section">
+        <label class="section-title">
+          <i class="fa-solid fa-layer-group"></i> Department Scope
+        </label>
+        <select class="select-control" id="deptFilterSelect">
+          <option value="All">All Departments (Entire Campus)</option>
+          <option value="Admissions">Admissions & Eligibility</option>
+          <option value="Fees & Scholarships">Fees & Scholarships</option>
+          <option value="Computer Science">Computer Science & Eng</option>
+          <option value="Hostel & Mess">Hostel & Campus Life</option>
+          <option value="Placements & Careers">Placements & Careers</option>
+          <option value="Exam Cell">Examination & Grading</option>
+          <option value="Central Library">Central Library</option>
+          <option value="Student Clubs & Sports">Clubs & Sports</option>
+        </select>
+      </div>
+
+      <!-- Chat Sessions History -->
+      <div class="sidebar-section history-section">
+        <label class="section-title">
+          <i class="fa-solid fa-clock-rotate-left"></i> Conversation History
+        </label>
+        <div class="history-list" id="historyList">
+          <!-- Loaded dynamically -->
+          <div class="history-empty">No conversations yet</div>
+        </div>
+      </div>
+
+      <!-- Navigation Switcher (Chat vs Admin) -->
+      <div class="sidebar-footer">
+        <div class="nav-tabs">
+          <button class="nav-tab active" id="tabChatBtn">
+            <i class="fa-solid fa-comment-dots"></i>
+            <span>Student Chat</span>
+          </button>
+          <button class="nav-tab" id="tabAdminBtn">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>Admin Portal</span>
+          </button>
+        </div>
+
+        <div class="user-profile-bar" id="userProfileBar">
+          <div class="user-avatar" id="userAvatar">
+            <i class="fa-solid fa-user-graduate"></i>
+          </div>
+          <div class="user-info">
+            <span class="user-name" id="userName">Guest Student</span>
+            <span class="user-role-badge" id="userRoleBadge">Guest Mode</span>
+          </div>
+          <button class="icon-btn" id="authActionBtn" title="Account">
+            <i class="fa-solid fa-right-to-bracket"></i>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top Navigation Bar -->
+      <header class="top-nav">
+        <div class="nav-left">
+          <button class="icon-btn toggle-sidebar-btn" id="toggleSidebarBtn" title="Toggle Sidebar">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <div class="current-scope-badge" id="currentScopeBadge">
+            <i class="fa-solid fa-building-columns"></i>
+            <span>Scope: <strong>All Departments</strong></span>
+          </div>
+        </div>
+
+        <div class="nav-right">
+          <button class="btn btn-outline-sm" id="seedDataQuickBtn" title="Pre-load Sample College Docs">
+            <i class="fa-solid fa-database"></i>
+            <span>Seed Sample Knowledge</span>
+          </button>
+          <button class="icon-btn theme-toggle" id="themeToggleBtn" title="Toggle Light/Dark Theme">
+            <i class="fa-solid fa-moon"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- VIEW 1: Chat View -->
+      <div class="view-panel active" id="chatView">
+        <div class="chat-container">
+          <!-- Messages Scroll Area -->
+          <div class="messages-area" id="messagesArea">
+            <!-- Welcome Hero (shown when empty) -->
+            <div class="welcome-hero" id="welcomeHero">
+              <div class="hero-icon">
+                <i class="fa-solid fa-graduation-cap"></i>
+              </div>
+              <h1>Welcome to Apex AI Assistant</h1>
+              <p>Ask anything about college admissions, curriculum, hostel regulations, examination policies, placement records, and campus facilities powered by RAG.</p>
+              
+              <div class="starter-prompts">
+                <button class="starter-card" data-prompt="What is the annual tuition fee for B.Tech Computer Science and what scholarships are available?">
+                  <i class="fa-solid fa-receipt"></i>
+                  <span>B.Tech CS Fee & Scholarships</span>
+                </button>
+                <button class="starter-card" data-prompt="What are the hostel gate curfew timings and mess meal hours?">
+                  <i class="fa-solid fa-bed"></i>
+                  <span>Hostel Timings & Mess Rules</span>
+                </button>
+                <button class="starter-card" data-prompt="What was the highest and average placement package for the Computer Science department?">
+                  <i class="fa-solid fa-briefcase"></i>
+                  <span>Placement Statistics & Recruiters</span>
+                </button>
+                <button class="starter-card" data-prompt="What is the minimum attendance required to appear for semester end examinations?">
+                  <i class="fa-solid fa-clipboard-check"></i>
+                  <span>Attendance & Exam Regulations</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Messages list -->
+            <div class="message-stream" id="messageStream"></div>
+          </div>
+
+          <!-- Chat Input Bar -->
+          <div class="chat-input-wrapper">
+            <form class="chat-input-form" id="chatForm">
+              <div class="input-container">
+                <textarea
+                  id="chatInput"
+                  placeholder="Ask a question (e.g. 'What is the cutoff for CSE admission?', 'Library borrowing limits?')..."
+                  rows="1"
+                ></textarea>
+                <button type="submit" class="send-btn" id="sendBtn" title="Send Question">
+                  <i class="fa-solid fa-arrow-up"></i>
+                </button>
+              </div>
+            </form>
+            <div class="input-footnote">
+              <i class="fa-solid fa-circle-info"></i>
+              <span>Answers are strictly grounded in verified college documents with citations.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 2: Admin Portal -->
+      <div class="view-panel" id="adminView">
+        <div class="admin-container">
+          <div class="admin-header">
+            <div>
+              <h2>Admin Knowledge & Vector Management</h2>
+              <p>Manage uploaded documents, view vector store analytics, inspect audit logs, and trigger semantic re-indexing.</p>
+            </div>
+            <div class="admin-actions">
+              <button class="btn btn-primary" id="openUploadModalBtn">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <span>Upload New Document</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Real-Time Metrics Cards -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon icon-blue">
+                <i class="fa-solid fa-file-lines"></i>
+              </div>
+              <div class="stat-content">
+                <span class="stat-label">Total Documents</span>
+                <h3 class="stat-value" id="statTotalDocs">0</h3>
+                <span class="stat-sub">Indexed in knowledge base</span>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon icon-purple">
+                <i class="fa-solid fa-cubes-stacked"></i>
+              </div>
+              <div class="stat-content">
+                <span class="stat-label">Vector Chunks</span>
+                <h3 class="stat-value" id="statTotalChunks">0</h3>
+                <span class="stat-sub">ChromaDB embeddings</span>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon icon-green">
+                <i class="fa-solid fa-comments"></i>
+              </div>
+              <div class="stat-content">
+                <span class="stat-label">Total Queries</span>
+                <h3 class="stat-value" id="statTotalQueries">0</h3>
+                <span class="stat-sub">Student RAG requests</span>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon icon-orange">
+                <i class="fa-solid fa-bolt"></i>
+              </div>
+              <div class="stat-content">
+                <span class="stat-label">Avg Search Latency</span>
+                <h3 class="stat-value" id="statAvgLatency">0 ms</h3>
+                <span class="stat-sub" id="statLLMProvider">Engine: Gemini / Local</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Document Management Section -->
+          <div class="admin-card">
+            <div class="card-header">
+              <div class="card-title">
+                <i class="fa-solid fa-folder-open"></i>
+                <h3>College Knowledge Base Documents</h3>
+              </div>
+              <div class="table-controls">
+                <input type="text" class="search-input" id="docSearchInput" placeholder="Search documents..." />
+                <select class="select-control-sm" id="adminDeptFilter">
+                  <option value="All">All Departments</option>
+                  <!-- Populated dynamically -->
+                </select>
+                <button class="btn btn-outline-sm" id="refreshDocsBtn" title="Refresh Table">
+                  <i class="fa-solid fa-arrows-rotate"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="data-table" id="docsTable">
+                <thead>
+                  <tr>
+                    <th>Document Title</th>
+                    <th>Department</th>
+                    <th>File Format</th>
+                    <th>Chunks</th>
+                    <th>File Size</th>
+                    <th>Status</th>
+                    <th>Date Added</th>
+                    <th class="text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="docsTableBody">
+                  <tr>
+                    <td colspan="8" class="text-center py-4">Loading documents...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Department Distribution Breakdown -->
+          <div class="admin-grid-2">
+            <div class="admin-card">
+              <div class="card-header">
+                <div class="card-title">
+                  <i class="fa-solid fa-chart-pie"></i>
+                  <h3>Department Knowledge Distribution</h3>
+                </div>
+              </div>
+              <div class="dept-distribution-list" id="deptDistributionList">
+                <!-- Rendered dynamically -->
+              </div>
+            </div>
+
+            <div class="admin-card">
+              <div class="card-header">
+                <div class="card-title">
+                  <i class="fa-solid fa-list-check"></i>
+                  <h3>Recent Query Audit Log</h3>
+                </div>
+              </div>
+              <div class="audit-log-list" id="auditLogList">
+                <!-- Rendered dynamically -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- MODAL 1: Citation Detail Drawer / Modal -->
+  <div class="modal-backdrop" id="citationModal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i class="fa-solid fa-book-bookmark"></i>
+          <h3 id="citationModalTitle">Source Verification</h3>
+        </div>
+        <button class="icon-btn" id="closeCitationModalBtn"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="citation-meta-tags">
+          <span class="badge badge-dept" id="citationModalDept">Department</span>
+          <span class="badge badge-page" id="citationModalPage">Page 1</span>
+          <span class="badge badge-score" id="citationModalScore">Similarity: 0.95</span>
+        </div>
+        <div class="citation-quote-box">
+          <p id="citationModalText"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: Document Upload Modal -->
+  <div class="modal-backdrop" id="uploadModal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          <h3>Upload Knowledge Document</h3>
+        </div>
+        <button class="icon-btn" id="closeUploadModalBtn"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <form id="uploadForm">
+          <div class="form-group">
+            <label>Document Title</label>
+            <input type="text" class="input-control" id="uploadDocTitle" placeholder="e.g. B.Tech CS Curriculum & Syllabus 2026" />
+          </div>
+
+          <div class="form-group">
+            <label>Target Department</label>
+            <select class="select-control" id="uploadDocDept">
+              <option value="Admissions">Admissions & Eligibility</option>
+              <option value="Fees & Scholarships">Fees & Scholarships</option>
+              <option value="Computer Science">Computer Science & Engineering</option>
+              <option value="Hostel & Mess">Hostel & Campus Life</option>
+              <option value="Placements & Careers">Placements & Careers</option>
+              <option value="Exam Cell">Examination & Grading</option>
+              <option value="Central Library">Central Library</option>
+              <option value="Student Clubs & Sports">Student Clubs & Sports</option>
+              <option value="General">General Administration</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Choose File (PDF, DOCX, TXT, MD)</label>
+            <div class="file-drop-zone" id="dropZone">
+              <i class="fa-solid fa-file-arrow-up"></i>
+              <p>Drag and drop your file here or <span>browse</span></p>
+              <input type="file" id="fileInput" accept=".pdf,.docx,.txt,.md,.json,.csv" style="display:none;" />
+              <div class="selected-file-name" id="selectedFileName">No file chosen</div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-ghost" id="cancelUploadBtn">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="submitUploadBtn">
+              <i class="fa-solid fa-check"></i>
+              <span>Process & Index</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: Authentication Modal -->
+  <div class="modal-backdrop" id="authModal">
+    <div class="modal-dialog auth-dialog">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i class="fa-solid fa-user-lock"></i>
+          <h3 id="authModalTitle">Sign In</h3>
+        </div>
+        <button class="icon-btn" id="closeAuthModalBtn"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <!-- Quick Fill Helper Buttons -->
+        <div class="demo-login-box">
+          <span>Quick Demo Logins:</span>
+          <div class="demo-btn-group">
+            <button class="btn btn-sm btn-outline" id="demoAdminBtn">
+              <i class="fa-solid fa-user-shield"></i> Admin Demo
+            </button>
+            <button class="btn btn-sm btn-outline" id="demoStudentBtn">
+              <i class="fa-solid fa-user-graduate"></i> Student Demo
+            </button>
+          </div>
+        </div>
+
+        <form id="authForm">
+          <div class="form-group" id="fullNameGroup" style="display:none;">
+            <label>Full Name</label>
+            <input type="text" class="input-control" id="authFullName" placeholder="e.g. Alex Johnson" />
+          </div>
+
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" class="input-control" id="authEmail" required placeholder="admin@college.edu" />
+          </div>
+
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" class="input-control" id="authPassword" required placeholder="••••••••" />
+          </div>
+
+          <div class="form-group" id="roleSelectGroup" style="display:none;">
+            <label>Account Role</label>
+            <select class="select-control" id="authRole">
+              <option value="student">Student</option>
+              <option value="admin">Administrator</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block" id="authSubmitBtn">
+            Sign In
+          </button>
+        </form>
+
+        <div class="auth-toggle-link">
+          <span id="authToggleText">Don't have an account?</span>
+          <a href="#" id="authToggleBtn">Sign Up</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Scripts -->
+  <script src="frontend/js/api.js"></script>
+  <script src="frontend/js/auth.js"></script>
+  <script src="frontend/js/chat.js"></script>
+  <script src="frontend/js/admin.js"></script>
+</body>
+</html>
