@@ -22,17 +22,17 @@ app.add_middleware(
 # Mount frontend static files
 frontend_dir = BASE_DIR / 'frontend'
 if frontend_dir.exists():
-    app.mount('/frontend', StaticFiles(directory=frontend_dir), name='frontend')
+    app.mount('/frontend', StaticFiles(directory=str(frontend_dir)), name='frontend')
 
 # Mount root static files (index.html, style.css, etc.)
-app.mount('/static', StaticFiles(directory=BASE_DIR), name='static')
+static_dir = BASE_DIR
+app.mount('/static', StaticFiles(directory=str(static_dir)), name='static')
 
-# Include routers (to be implemented)
-# from app.routers import auth, chat, documents, admin
-# app.include_router(auth.router, prefix='/api/auth', tags=['Auth'])
-# app.include_router(chat.router, prefix='/api/chat', tags=['Chat'])
-# app.include_router(documents.router, prefix='/api/documents', tags=['Documents'])
-# app.include_router(admin.router, prefix='/api/admin', tags=['Admin'])
+# Include routers
+from app.routers import auth, chat, documents
+app.include_router(auth.router, prefix='/api/auth', tags=['Auth'])
+app.include_router(chat.router, prefix='/api/chat', tags=['Chat'])
+app.include_router(documents.router, prefix='/api/documents', tags=['Documents'])
 
 @app.get('/')
 async def root():
